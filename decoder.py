@@ -25,11 +25,11 @@ import pylab
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(5, 30, 3, 1)
-        self.conv2 = nn.Conv2d(30, 60, 3, 1)
+        self.conv1 = nn.Conv2d(5, 10, 3, 1)
+        self.conv2 = nn.Conv2d(10, 20, 3, 1)
         self.dropout1 = nn.Dropout2d(0.25)
         self.dropout2 = nn.Dropout2d(0.5)
-        self.fc1 = nn.Linear(9216, 128)
+        self.fc1 = nn.Linear(8000, 128)
         self.fc2 = nn.Linear(128, 10)
 
     def forward(self, x):
@@ -48,19 +48,19 @@ class Net(nn.Module):
 
 def train():
     loss_val=[]
-    for tr in range(40):
+    for tr in range(10):
         vlr=tr % 10
         if vlr==0:
             for g in optimizer.param_groups:
-                g['lr'] = g['lr']*1.0
+                g['lr'] = g['lr']*0.1
         loss_total=0
         for xin in batches:
-            inputs=train_inputs[xin[0]:xin[1],:,:,:]
-            targets=train_labels[xin[0]:xin[1]]
-
+            inputs=train_data[xin[0]:xin[1],:,:,:]
+            targets=train_label[xin[0]:xin[1]]
+            
             optimizer.zero_grad()
             output = net(inputs)
-            loss = criterion(output, targets)
+            loss = F.nll_loss(output, targets)
             loss.backward()
             optimizer.step()
             loss_total=loss_total+loss.item()
@@ -69,41 +69,35 @@ def train():
     return loss_val
 
 def test():
+    correct = 0
     with torch.no_grad():
         ans=0
-        ct=float(len(test_labels))
         
-        outputs=net(test_inputs)
+        ct=float(test_data.shape[0])
+        outputs=net(test_data)
         pred = torch.argmax(outputs, dim=1)
-        print (outputs)
-        for xi, xin in enumerate(pred):
-            #print (xi, xin.item(), test_labels[xi, xin].item())
-            if test_labels[xi,xin].item()>0.98:
-                ans=ans+1
-    return float(ans)/ct
+        correct += pred.eq(test_label.view_as(pred)).sum().item()
+
+    return float(correct)/ct
 
 def validate():
+    correct = 0
     with torch.no_grad():
         ans=0
-        ct=float(len(train_labels))
         
-        outputs=net(train_inputs)
+        ct=float(train_data.shape[0])
+        outputs=net(train_data)
         pred = torch.argmax(outputs, dim=1)
+        correct += pred.eq(train_label.view_as(pred)).sum().item()
 
-        for xi, xin in enumerate(pred):
-            #print (xi, xin.item(), test_labels[xi, xin].item(),test_labels[xi, xin.item()].item())
-            if train_labels[xi,xin].item()>0.98:
-                ans=ans+1
-        
-        
-    return float(ans)/ct
+    return float(correct)/ct
 
             
         
 
 
 
-parser = argparse.ArgumentParser(description='read out lfp signals from neuropixel')
+parser = argparse.ArgumentParser(description='find info from coherence patterns')
 parser.add_argument('--subject', type=str, default='1',
                     help=' the desired subject (default: 1 )')
 
@@ -126,13 +120,43 @@ fn=cwd+'/converted_data/test/'+sid+'/labeltest_'+sid+'.pt'
 test_label=torch.load(fn)
 
 train_data=train_data.float()
-train_label=train_label.float()
+train_label=train_label.long()
 
 test_data=test_data.float()
-test_label=test_label.float()
+test_label=test_label.long()
 
 print (train_data.shape)
 
+mini_batch_size=10
+total=train_data.shape[0]
+
+net=Net()
+optimizer = optim.Adadelta(net.parameters(), lr=0.01)
+
+
+num=int(total/mini_batch_size)
+res=int(total) % int(mini_batch_size)
+
+batches=[]
+
+for xin in range(num):
+    st=mini_batch_size*xin
+    end=mini_batch_size*(xin+1)
+    batches.append((st,end))
+
+
+if res==0:
+    pass
+else:
+    batches.append((end,total))
+
+print (batches)
+
+train_history=train()
+
+print (train_history)
+print ('train',validate())
+print ('test',test())
 
 # end of script
 
