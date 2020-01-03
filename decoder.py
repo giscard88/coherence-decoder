@@ -25,12 +25,12 @@ import pylab
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(5, 10, 3, 1)
-        self.conv2 = nn.Conv2d(10, 20, 3, 1)
+        self.conv1 = nn.Conv2d(5, 30, 2, 1)
+        self.conv2 = nn.Conv2d(30, 60, 2, 1)
         self.dropout1 = nn.Dropout2d(0.25)
         self.dropout2 = nn.Dropout2d(0.5)
-        self.fc1 = nn.Linear(8000, 128)
-        self.fc2 = nn.Linear(128, 10)
+        self.fc1 = nn.Linear(26460, 500)
+        self.fc2 = nn.Linear(500, 4)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -48,7 +48,7 @@ class Net(nn.Module):
 
 def train():
     loss_val=[]
-    for tr in range(10):
+    for tr in range(5):
         vlr=tr % 10
         if vlr==0:
             for g in optimizer.param_groups:
