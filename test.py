@@ -178,7 +178,7 @@ def convert(sid, attr='train'):
 
 
 if __name__ == '__main__':
-    for s in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]: #1 done
+    for s in [1]: #1 done
         for b in ['train', 'test']:
             print (s, b)
             convert(s, b)

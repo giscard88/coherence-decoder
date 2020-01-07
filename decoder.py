@@ -25,11 +25,11 @@ import pylab
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(5, 30, 2, 1)
-        self.conv2 = nn.Conv2d(30, 60, 2, 1)
+        self.conv1 = nn.Conv2d(16, 32, 2, 1)
+        self.conv2 = nn.Conv2d(32, 64, 2, 1)
         self.dropout1 = nn.Dropout2d(0.25)
         self.dropout2 = nn.Dropout2d(0.5)
-        self.fc1 = nn.Linear(26460, 500)
+        self.fc1 = nn.Linear(28224, 500)
         self.fc2 = nn.Linear(500, 4)
 
     def forward(self, x):
@@ -48,13 +48,13 @@ class Net(nn.Module):
 
 def train():
     loss_val=[]
-    for tr in range(5):
+    for tr in range(50):
         vlr=tr % 10
         if vlr==0:
             for g in optimizer.param_groups:
-                g['lr'] = g['lr']*0.1
+                g['lr'] = g['lr']*1.0
         loss_total=0
-        for xin in batches:
+        for xi, xin in enumerate(batches):
             inputs=train_data[xin[0]:xin[1],:,:,:]
             targets=train_label[xin[0]:xin[1]]
             
@@ -64,6 +64,36 @@ def train():
             loss.backward()
             optimizer.step()
             loss_total=loss_total+loss.item()
+            #print (output.shape)
+        print (tr,loss_total)
+        loss_val.append(loss_total)
+    return loss_val
+
+def train_test():
+    loss_val=[]
+    inputs_temp=[]
+    loss_total=0
+    in1=train_data[0,:,:,:].numpy()
+    in2=train_data[4,:,:,:].numpy()
+
+    inputs_temp.append(in1)
+    inputs_temp.append(in2)
+    inputs=np.array(inputs_temp)
+    inputs=torch.from_numpy(inputs)
+    targets=np.ones(2)
+    targets=torch.from_numpy(targets)
+    targets=targets.long()
+    for tr in range(10):
+        loss_total=0   
+
+            
+        optimizer.zero_grad()
+        output = net(inputs)
+        loss = F.nll_loss(output, targets)
+        loss.backward()
+        optimizer.step()
+        loss_total=loss.item()
+        print (output.shape)
         print (tr,loss_total)
         loss_val.append(loss_total)
     return loss_val
@@ -108,15 +138,18 @@ sid=args.subject
 
 cwd=os.getcwd()
 
-fn=cwd+'/converted_data/train/'+sid+'/inputtrain_'+sid+'.pt'
+#fn=cwd+'/converted_data/train/'+sid+'/inputtrain_'+sid+'.pt'
+fn=cwd+'/inputtrain_'+sid+'.pt'
 train_data=torch.load(fn)
-fn=cwd+'/converted_data/train/'+sid+'/labeltrain_'+sid+'.pt'
+fn=cwd+'/labeltrain_'+sid+'.pt'
 train_label=torch.load(fn)
 
+print (train_label)
 
-fn=cwd+'/converted_data/test/'+sid+'/inputtest_'+sid+'.pt'
+
+fn=cwd+'/inputtest_'+sid+'.pt'
 test_data=torch.load(fn)
-fn=cwd+'/converted_data/test/'+sid+'/labeltest_'+sid+'.pt'
+fn=cwd+'/labeltest_'+sid+'.pt'
 test_label=torch.load(fn)
 
 train_data=train_data.float()
@@ -131,7 +164,7 @@ mini_batch_size=10
 total=train_data.shape[0]
 
 net=Net()
-optimizer = optim.Adadelta(net.parameters(), lr=0.01)
+optimizer = optim.Adadelta(net.parameters(), lr=0.1)
 
 
 num=int(total/mini_batch_size)

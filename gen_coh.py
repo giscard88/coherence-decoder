@@ -229,7 +229,7 @@ if __name__ == '__main__':
     #periods_=[[0,500],[500,1000]]
     labels_=[]
     
-    for s in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]: #1 done 
+    for s in [1]: #1 done 
         for b in ['train','test']:
             coh_array_flag=False
             for pr in periods_:
