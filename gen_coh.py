@@ -229,7 +229,7 @@ if __name__ == '__main__':
     #periods_=[[0,500],[500,1000]]
     labels_=[]
     
-    for s in [1]: #1 done 
+    for s in [2,3]: #1 done 
         for b in ['train','test']:
             coh_array_flag=False
             for pr in periods_:
@@ -244,7 +244,7 @@ if __name__ == '__main__':
             tensor_in=torch.from_numpy(coh_tensor)
             tensor_lab=torch.from_numpy(label)
             tensor_in=tensor_in.float()
-            tensor_lab=tensor_lab.float()
+            tensor_lab=tensor_lab.long()
             torch.save(tensor_in, 'input'+b+'_'+str(s)+'.pt')
             torch.save(tensor_lab, 'label'+b+'_'+str(s)+'.pt')
             del coh_tensor, label
