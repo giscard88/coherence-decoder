@@ -19,36 +19,17 @@ import torch.nn.functional as F
 import json
 import argparse
 import numpy as np
-from collections import defaultdict
 import pylab
 
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(40, 80, 3, 1)
-        self.conv2 = nn.Conv2d(80, 160, 3, 1)
-        self.dropout1 = nn.Dropout2d(0.25)
-        self.dropout2 = nn.Dropout2d(0.5)
-        self.fc1 = nn.Linear(64000, 500)
-        self.fc2 = nn.Linear(500, 4)
 
-    def forward(self, x):
-        x = self.conv1(x)
-        x = F.relu(x)
-        x = self.conv2(x)
-        x = F.max_pool2d(x, 2)
-        x = self.dropout1(x)
-        x = torch.flatten(x, 1)
-        x = self.fc1(x)
-        x = F.relu(x)
-        x = self.dropout2(x)
-        x = self.fc2(x)
-        output = F.log_softmax(x, dim=1)
-        return output
+from collections import defaultdict
+from modelres import *
+
 
 def train():
     loss_val=[]
-    for tr in range(50):
+    crit = nn.CrossEntropyLoss()
+    for tr in range(5):
         vlr=tr % 10
         if vlr==0:
             for g in optimizer.param_groups:
@@ -60,12 +41,12 @@ def train():
             
             optimizer.zero_grad()
             output = net(inputs)
-            loss = F.nll_loss(output, targets)
+            loss = crit(output, targets)
             loss.backward()
             optimizer.step()
             loss_total=loss_total+loss.item()
             #print (output.shape)
-
+        print (tr,loss_total)
         loss_val.append(loss_total)
     return loss_val
 
@@ -136,7 +117,7 @@ args = parser.parse_args()
 sid=args.subject
 
 duration=500
-channel=5
+channel=2
 cwd=os.getcwd()
 
 #fn=cwd+'/converted_data/train/'+sid+'/inputtrain_'+sid+'.pt'
@@ -145,6 +126,7 @@ train_data=torch.load(fn)
 fn=cwd+'/p'+str(duration)+'ch'+str(channel)+'/labeltrain_'+sid+'.pt'
 train_label=torch.load(fn)
 
+print (train_label)
 
 
 fn=cwd+'/p'+str(duration)+'ch'+str(channel)+'/inputtest_'+sid+'.pt'
@@ -158,13 +140,14 @@ train_label=train_label.long()
 test_data=test_data.float()
 test_label=test_label.long()
 
-
+#print (train_data.shape)
 
 mini_batch_size=10
 total=train_data.shape[0]
 
-net=Net()
-optimizer = optim.Adadelta(net.parameters(), lr=0.1)
+net=resneteeg()
+
+optimizer = optim.Adadelta(net.parameters(), lr=0.05)
 
 
 num=int(total/mini_batch_size)
