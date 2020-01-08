@@ -47,8 +47,8 @@ log = logging.getLogger(__name__)
 log.setLevel('DEBUG')
 
 cwd=os.getcwd()
-
- 
+channel=5
+duration=500 
 
 
 def load_bbci_data(filename, low_cut_hz, period, debug=False):
@@ -183,7 +183,7 @@ def convert(sid ,period ,attr='train'):
 
 def split_power(freq_,data,t_,sid,attr,label,period):
 
-    channel=2
+    
     width_freq=125.0/(channel*2.0) # each channel will have correlations in the two sub-frequency bands
     edges_freq=np.arange(0,125.0,width_freq)
     edges_freq=np.hstack((edges_freq,125.0)) # it adds the final edge (125.0 Hz).
@@ -225,11 +225,34 @@ def split_power(freq_,data,t_,sid,attr,label,period):
 
 
 if __name__ == '__main__':
-    periods_=[[0,500],[500,1000],[1000,1500],[1500,2000],[2000,2500],[2500,3000],[3000,3500],[3500,4000]]
-    #periods_=[[0,500],[500,1000]]
-    labels_=[]
+    cwd=os.getcwd()
+
     
-    for s in [2,3]: #1 done 
+
+    residual=4000 % duration
+
+    if residual==0:
+        temp=np.arange(0,4000,duration)
+        temp=np.hstack((temp,4000))
+   
+
+    else:
+        sys.exit('4000 ms should be divisible by duration')
+
+    periods_=[]
+
+    for t, value in enumerate(temp[:-1]):
+    
+        periods_.append([value,temp[t+1]])
+
+    print (periods_)
+
+    labels_=[]
+    target_dir=cwd+'/p'+str(duration)+'ch'+str(channel)
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+    
+    for s in [1]: #1 done 
         for b in ['train','test']:
             coh_array_flag=False
             for pr in periods_:
@@ -245,9 +268,10 @@ if __name__ == '__main__':
             tensor_lab=torch.from_numpy(label)
             tensor_in=tensor_in.float()
             tensor_lab=tensor_lab.long()
-            torch.save(tensor_in, 'input'+b+'_'+str(s)+'.pt')
-            torch.save(tensor_lab, 'label'+b+'_'+str(s)+'.pt')
+            torch.save(tensor_in, target_dir+'/input'+b+'_'+str(s)+'.pt')
+            torch.save(tensor_lab, target_dir+'/label'+b+'_'+str(s)+'.pt')
             del coh_tensor, label
+    
      
 
               

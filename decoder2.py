@@ -25,13 +25,13 @@ import pylab
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(16, 16, 2, 1,groups=16)
-        self.point1=nn.Conv2d(16,64,kernel_size=1)
-        self.conv2 = nn.Conv2d(64, 64, 2, 1,groups=32)
-        self.point2=nn.Conv2d(64,128,kernel_size=1)
+        self.conv1 = nn.Conv2d(16, 64, 2, 1,groups=16)
+        self.point1=nn.Conv2d(64,128,kernel_size=1)
+        self.conv2 = nn.Conv2d(128, 256, 2, 1,groups=32)
+        self.point2=nn.Conv2d(256,512,kernel_size=1)
         self.dropout1 = nn.Dropout2d(0.25)
         self.dropout2 = nn.Dropout2d(0.5)
-        self.fc1 = nn.Linear(56448, 500)
+        self.fc1 = nn.Linear(225792, 500)
         self.fc2 = nn.Linear(500, 4)
 
     def forward(self, x):

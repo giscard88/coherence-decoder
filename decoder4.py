@@ -25,7 +25,7 @@ import pylab
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(16, 32, 3, 1)
+        self.conv1 = nn.Conv2d(16, 32, 2, 1)
         self.conv2 = nn.Conv2d(32, 64, 3, 1)
         self.dropout1 = nn.Dropout2d(0.25)
         self.dropout2 = nn.Dropout2d(0.5)
@@ -135,21 +135,22 @@ parser.add_argument('--subject', type=str, default='1',
 args = parser.parse_args()
 sid=args.subject
 
-
+duration=1000
+channel=4
 cwd=os.getcwd()
 
 #fn=cwd+'/converted_data/train/'+sid+'/inputtrain_'+sid+'.pt'
-fn=cwd+'/inputtrain_'+sid+'.pt'
+fn=cwd+'/p'+str(duration)+'ch'+str(channel)+'/inputtrain_'+sid+'.pt'
 train_data=torch.load(fn)
-fn=cwd+'/labeltrain_'+sid+'.pt'
+fn=cwd+'/p'+str(duration)+'ch'+str(channel)+'/labeltrain_'+sid+'.pt'
 train_label=torch.load(fn)
 
 print (train_label)
 
 
-fn=cwd+'/inputtest_'+sid+'.pt'
+fn=cwd+'/p'+str(duration)+'ch'+str(channel)+'/inputtest_'+sid+'.pt'
 test_data=torch.load(fn)
-fn=cwd+'/labeltest_'+sid+'.pt'
+fn=cwd+'/p'+str(duration)+'ch'+str(channel)+'/labeltest_'+sid+'.pt'
 test_label=torch.load(fn)
 
 train_data=train_data.float()
