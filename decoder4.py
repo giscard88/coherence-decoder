@@ -25,11 +25,11 @@ import pylab
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(40, 80, 3, 1)
-        self.conv2 = nn.Conv2d(80, 160, 3, 1)
-        self.dropout1 = nn.Dropout2d(0.25)
+        self.conv1 = nn.Conv2d(16, 32, 2, 1)
+        self.conv2 = nn.Conv2d(32, 64, 3, 1)
+        self.dropout1 = nn.Dropout2d(0.5)
         self.dropout2 = nn.Dropout2d(0.5)
-        self.fc1 = nn.Linear(64000, 500)
+        self.fc1 = nn.Linear(25600, 500)
         self.fc2 = nn.Linear(500, 4)
 
     def forward(self, x):
@@ -48,15 +48,17 @@ class Net(nn.Module):
 
 def train():
     loss_val=[]
-    for tr in range(50):
-        vlr=tr % 10
+    for tr in range(100):
+        print (tr)
+        vlr=tr % 2
         if vlr==0:
-            for g in optimizer.param_groups:
-                g['lr'] = g['lr']*1.0
+            print(test())
         loss_total=0
         for xi, xin in enumerate(batches):
             inputs=train_data[xin[0]:xin[1],:,:,:]
             targets=train_label[xin[0]:xin[1]]
+            #inputs=inputs.to(device)
+            #targets=targets.to(device)
             
             optimizer.zero_grad()
             output = net(inputs)
@@ -67,59 +69,35 @@ def train():
             #print (output.shape)
 
         loss_val.append(loss_total)
+    #del inputs, targets
     return loss_val
 
-def train_test():
-    loss_val=[]
-    inputs_temp=[]
-    loss_total=0
-    in1=train_data[0,:,:,:].numpy()
-    in2=train_data[4,:,:,:].numpy()
 
-    inputs_temp.append(in1)
-    inputs_temp.append(in2)
-    inputs=np.array(inputs_temp)
-    inputs=torch.from_numpy(inputs)
-    targets=np.ones(2)
-    targets=torch.from_numpy(targets)
-    targets=targets.long()
-    for tr in range(10):
-        loss_total=0   
-
-            
-        optimizer.zero_grad()
-        output = net(inputs)
-        loss = F.nll_loss(output, targets)
-        loss.backward()
-        optimizer.step()
-        loss_total=loss.item()
-        print (output.shape)
-        print (tr,loss_total)
-        loss_val.append(loss_total)
-    return loss_val
 
 def test():
     correct = 0
     with torch.no_grad():
         ans=0
-        
+        inputs=test_data
+        targets=test_label
         ct=float(test_data.shape[0])
         outputs=net(test_data)
         pred = torch.argmax(outputs, dim=1)
         correct += pred.eq(test_label.view_as(pred)).sum().item()
-
+    del inputs, targets   
     return float(correct)/ct
 
 def validate():
     correct = 0
     with torch.no_grad():
         ans=0
-        
+        inputs=train_data
+        targets=train_label
         ct=float(train_data.shape[0])
         outputs=net(train_data)
         pred = torch.argmax(outputs, dim=1)
         correct += pred.eq(train_label.view_as(pred)).sum().item()
-
+    del inputs, targets  
     return float(correct)/ct
 
             
@@ -132,11 +110,20 @@ parser.add_argument('--subject', type=str, default='1',
                     help=' the desired subject (default: 1 )')
 
 
+
+
 args = parser.parse_args()
 sid=args.subject
 
+
+
+if torch.cuda.is_available():  
+    device = "cuda:0" 
+else:  
+    device = "cpu"  
+
 duration=500
-channel=5
+channel=2
 cwd=os.getcwd()
 
 #fn=cwd+'/converted_data/train/'+sid+'/inputtrain_'+sid+'.pt'
@@ -152,18 +139,18 @@ test_data=torch.load(fn)
 fn=cwd+'/p'+str(duration)+'ch'+str(channel)+'/labeltest_'+sid+'.pt'
 test_label=torch.load(fn)
 
-train_data=train_data.float()
-train_label=train_label.long()
+train_data=train_data.float().to(device)
+train_label=train_label.long().to(device)
 
-test_data=test_data.float()
-test_label=test_label.long()
+test_data=test_data.float().to(device)
+test_label=test_label.long().to(device)
 
 
-
+print (device)
 mini_batch_size=10
 total=train_data.shape[0]
 
-net=Net()
+net=Net().to(device)
 optimizer = optim.Adadelta(net.parameters(), lr=0.1)
 
 

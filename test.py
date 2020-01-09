@@ -1,29 +1,15 @@
-import numpy as np
-import sys
+import torch
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print('Using device:', device)
+print()
 
-duration=250
-
-residual=4000 % duration
-
-if residual==0:
-    temp=np.arange(0,4000,duration)
-    temp=np.hstack((temp,4000))
-    print (temp)
-
-else:
-    sys.exit('4000 ms should be divisible by duration')
-
-
-periods_=[]
-
-for t, value in enumerate(temp[:-1]):
-    
-    periods_.append([value,temp[t+1]])
-
-print (periods_)
-
-
+#Additional Info when using cuda
+if device.type == 'cuda':
+    print(torch.cuda.get_device_name(0))
+    print('Memory Usage:')
+    print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
+    print('Cached:   ', round(torch.cuda.memory_cached(0)/1024**3,1), 'GB')
    
 
 

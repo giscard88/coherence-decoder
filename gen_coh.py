@@ -46,9 +46,11 @@ from braindecode.datautil.signalproc import exponential_running_standardize
 log = logging.getLogger(__name__)
 log.setLevel('DEBUG')
 
+ch_sel=sys.argv[1]
+d_sel=sys.argv[2]
 cwd=os.getcwd()
-channel=5
-duration=500 
+channel=int(ch_sel)
+duration=int(d_sel)
 
 
 def load_bbci_data(filename, low_cut_hz, period, debug=False):
