@@ -160,7 +160,7 @@ if __name__ == '__main__':
     if not os.path.exists(target_dir):
         os.makedirs(target_dir)
     
-    for s in [2]: #1 done 
+    for s in [1,2,3,4,5,6,7,8,9,10,11,12,13,14]: #1 done 
         for b in ['train','test']:
             coh_array_flag=False
             for pr in periods_:

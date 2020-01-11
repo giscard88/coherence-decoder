@@ -163,8 +163,8 @@ if __name__ == '__main__':
 
 
     
-    for s in [3,4,5,6,7,8,9,10,11,12,13,14]:
-        for sel in ['train']:
+    for s in [1,2, 3,4,5,6,7,8,9,10,11,12,13,14]:
+        for sel in ['train','test']:
             target_dir='converted_data/'+sel+'/'+str(s)
             if not os.path.exists(target_dir):
                 os.makedirs(target_dir)
