@@ -22,15 +22,30 @@ import numpy as np
 from collections import defaultdict
 import pylab
 
+duration=4000
+channel=8
+
+input_channel=int(4000/duration*channel)
+
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(16, 32, 2, 1)
-        self.conv2 = nn.Conv2d(32, 64, 3, 1)
-        self.dropout1 = nn.Dropout2d(0.5)
+        padd_1=0
+        ker_1=2
+        padd_2=0
+        ker_2=2
+        out1=int((44-ker_1+2*padd_1)+1)
+        out2=int((out1-ker_2+2*padd_2)+1)
+        out2=int(out2/2) # max pooling with the kernel of 2
+        final_size=int(out2*out2*input_channel*4)
+        #print ('out1',out1)
+        #print ('out2',out2)
+        self.conv1 = nn.Conv2d(input_channel, input_channel*2, ker_1, 1)
+        self.conv2 = nn.Conv2d(input_channel*2, input_channel*4, ker_2, 1)
+        self.dropout1 = nn.Dropout2d(0.25)
         self.dropout2 = nn.Dropout2d(0.5)
-        self.fc1 = nn.Linear(25600, 500)
-        self.fc2 = nn.Linear(500, 4)
+        self.fc1 = nn.Linear(final_size, 100)
+        self.fc2 = nn.Linear(100, 4)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -48,11 +63,13 @@ class Net(nn.Module):
 
 def train():
     loss_val=[]
+    test_history=[]
     for tr in range(100):
-        print (tr)
-        vlr=tr % 2
+        
+        vlr=tr % 1
         if vlr==0:
-            print(test())
+            test_=test()
+            test_history.append(test_)
         loss_total=0
         for xi, xin in enumerate(batches):
             inputs=train_data[xin[0]:xin[1],:,:,:]
@@ -67,10 +84,10 @@ def train():
             optimizer.step()
             loss_total=loss_total+loss.item()
             #print (output.shape)
-
+        print (tr,loss_total)
         loss_val.append(loss_total)
     #del inputs, targets
-    return loss_val
+    return test_history
 
 
 
@@ -122,8 +139,7 @@ if torch.cuda.is_available():
 else:  
     device = "cpu"  
 
-duration=500
-channel=2
+
 cwd=os.getcwd()
 
 #fn=cwd+'/converted_data/train/'+sid+'/inputtrain_'+sid+'.pt'
@@ -175,8 +191,13 @@ print (batches)
 train_history=train()
 
 print (train_history)
-print ('train',validate())
+print ('max',max(train_history))
+#print ('train',validate())
 print ('test',test())
 
+pylab.plot(train_history,'-bo')
+pylab.show()
+
+del train_data, train_label, test_data, test_label
 # end of script
 
