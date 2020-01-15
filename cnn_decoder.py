@@ -87,6 +87,7 @@ def train():
         if max_p==test_:
             #print ('update',max_p)
             model_best=copy.deepcopy(net)
+            model_best=model_best.cpu()
             #print('original',list(net.fc2.weight))
             #print('copy',list(model_best.fc2.weight))
         print (tr,loss_total)
@@ -113,6 +114,7 @@ def test():
 
 def test_best():
     correct = 0
+    model_best.to(device)
     model_best.eval()
     with torch.no_grad():
         ans=0
