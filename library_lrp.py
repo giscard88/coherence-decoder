@@ -32,6 +32,41 @@ This script is adopted from the github and modified slightly to implement variat
 
 # add relprop() method to each layer
 ########################################
+
+
+cwd=os.getcwd()
+
+
+parser = argparse.ArgumentParser(description='learn the patterns of coherence among EEG electrodes')
+parser.add_argument('--seed', type=int, default=10,
+                    help='random seed for pytorch and numpy (default: 10)')
+
+parser.add_argument('--duration', type=int, default=500,
+                    help='duration of time series of interest (default: 4000)')
+
+parser.add_argument('--channel', type=int, default=2,
+                    help='# of input channels: the half of number of frequency bands (default: 2)')
+
+
+
+args = parser.parse_args()
+
+
+
+
+seed=args.seed
+duration=args.duration
+channel=args.channel
+
+torch.manual_seed(seed)
+np.random.seed(seed)
+
+
+fn=cwd+'/best_model/best_'+str(duration)+'-'+str(channel)+'_'+str(seed)+'.pt'
+param=torch.load(fn)
+for xin in param:
+    print (xin)
+
 class Linear(nn.Linear):
     def __init__(self, linear):
         super(nn.Linear, self).__init__()
@@ -52,25 +87,6 @@ class ReLU(nn.ReLU):
     def relprop(self, R): 
         return R
 
-class Reshape_Alex(nn.Module):
-    def __init__(self):
-        super(Reshape_Alex, self).__init__()
-        
-    def forward(self, x):
-        return x.view(-1, 256*6*6)
-        
-    def relprop(self, R):
-        return R.view(-1, 256, 6, 6)
-
-class Reshape_VGG(nn.Module):
-    def __init__(self):
-        super(Reshape_VGG, self).__init__()
-        
-    def forward(self, x):
-        return x.view(-1, 512*7*7)
-        
-    def relprop(self, R):
-        return R.view(-1, 512, 7, 7)
 
 class MaxPool2d(nn.MaxPool2d):
     def __init__(self, maxpool2d):
@@ -123,3 +139,49 @@ class Conv2d(nn.Conv2d):
         C = self.gradprop(S)
         R = self.X * C
         return R
+
+
+
+class CNN_lrp(nn.Module):
+    def __init__(self):
+        super(CNN_lrp, self).__init__()
+        padd_1=0
+        ker_1=2
+        padd_2=0
+        ker_2=2
+        input_channel=10
+        out1=int((44-ker_1+2*padd_1)+1)
+        out2=int((out1-ker_2+2*padd_2)+1)
+        out2=int(out2/2) # max pooling with the kernel of 2
+        final_size=int(out2*out2*input_channel*4)
+        self.layers = nn.Sequential(
+            Conv2d(alex.features[0]),
+            ReLU(),
+            MaxPool2d(x,2),
+            Conv2d(alex.features[3]),
+            ReLU(),
+            
+            Linear(alex.classifier[1]),
+            ReLU(),
+            Linear(alex.classifier[4]),
+            ReLU(),
+            Linear(alex.classifier[6])
+        )
+        
+    def forward(self, x):
+        x = self.layers(x)
+        return x
+        
+    def relprop(self, R):
+        for l in range(len(self.layers), 0, -1):
+            R = self.layers[l-1].relprop(R)
+        return R
+
+
+
+
+
+print (model.features)
+
+for i in model.named_parameters():
+    print (i)

@@ -22,8 +22,37 @@ import numpy as np
 from collections import defaultdict
 import pylab
 
-duration=4000
-channel=8
+
+
+parser = argparse.ArgumentParser(description='learn the patterns of coherence among EEG electrodes')
+parser.add_argument('--seed', type=int, default=10,
+                    help='random seed for pytorch and numpy (default: 10)')
+
+parser.add_argument('--duration', type=int, default=500,
+                    help='duration of time series of interest (default: 4000)')
+
+parser.add_argument('--channel', type=int, default=2,
+                    help='# of input channels: the half of number of frequency bands (default: 2)')
+
+parser.add_argument('--iteration', type=int, default=100,
+                    help='maximal epochs of traning (default: 100)')
+
+parser.add_argument('--subject', type=str, default='1',
+                    help=' the desired subject (default: 1 )')
+
+
+args = parser.parse_args()
+
+
+
+
+seed=args.seed
+duration=args.duration
+channel=args.channel
+max_iteration=args.iteration
+sid=args.subject
+torch.manual_seed(seed)
+np.random.seed(seed)
 
 input_channel=int(4000/duration*channel)
 
@@ -65,7 +94,7 @@ def train():
     loss_val=[]
     test_history=[]
     net.train()
-    for tr in range(100):
+    for tr in range(max_iteration):
         
 
         loss_total=0
@@ -144,19 +173,6 @@ def validate():
         
 
 
-
-parser = argparse.ArgumentParser(description='find info from coherence patterns')
-parser.add_argument('--subject', type=str, default='1',
-                    help=' the desired subject (default: 1 )')
-
-
-
-
-args = parser.parse_args()
-sid=args.subject
-
-
-
 if torch.cuda.is_available():  
     device = "cuda:0" 
 else:  
@@ -220,7 +236,15 @@ print ('max',max(train_history))
 print ('test',test())
 print ('test_best',test_best())
 
-pylab.plot(train_history,'-bo')
+target_dir=cwd+'/best_model'
+if not os.path.exists(target_dir):
+    os.makedirs(target_dir)
+
+fn=target_dir+'/best_'+str(duration)+'-'+str(channel)+'_'+str(seed)+'.pt'
+torch.save(model_best.state_dict(),fn)
+
+
+pylab.plot(train_history,'-o')
 pylab.show()
 
 del train_data, train_label, test_data, test_label
