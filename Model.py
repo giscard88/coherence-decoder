@@ -37,16 +37,20 @@ parser.add_argument('--channel', type=int, default=2,
 parser.add_argument('--iteration', type=int, default=100,
                     help='maximal epochs of traning (default: 100)')
 
+parser.add_argument('--subject', type=int, default=1,
+                    help='target subject (default: 1)')
+
 
 args = parser.parse_args()
 
 
 
-
+cwd=os.getcwd()
 seed=args.seed
 duration=args.duration
 channel=args.channel
 max_iteration=args.iteration
+sid=str(args.subject)
 torch.manual_seed(seed)
 np.random.seed(seed)
 
@@ -87,7 +91,10 @@ class Net(nn.Module):
         return output
 
 
-model = Net()
+
+
+
+    
 
 
 

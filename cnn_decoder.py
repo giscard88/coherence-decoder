@@ -170,7 +170,8 @@ def validate():
     return float(correct)/ct
 
             
-        
+       
+
 
 
 if torch.cuda.is_available():  
