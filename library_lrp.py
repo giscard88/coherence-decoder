@@ -128,8 +128,9 @@ class Conv2d(nn.Conv2d):
                                         conv2d.dilation, 
                                         conv2d.transposed, 
                                         conv2d.output_padding, 
-                                        conv2d.groups, 
-                                        True)
+                                        conv2d.groups,
+                                        True, 
+                                        conv2d.padding_mode)
         self.weight = conv2d.weight
         self.bias = conv2d.bias
         #print ('conv_w',self.weight.size(), conv2d.in_channels,conv2d.out_channels)
@@ -209,6 +210,11 @@ correct_ = 0
 buffer_label = []
 buffer_lrp_model = []
 
+target_dir=cwd+'/LRP'
+if not os.path.exists(target_dir):
+    os.makedirs(target_dir)
+
+
 for idx, (input, label) in enumerate(data_loader):
     
     
@@ -227,30 +233,47 @@ for idx, (input, label) in enumerate(data_loader):
     buffer_label.append(label.data.cpu().numpy())
     buffer_lrp_model.append(pred_.cpu().numpy())
     
-    
+    comm_str=str(duration)+'-'+str(channel)+'_'+str(seed)
     # save results which are classified correctly by VGG16, incorrectly by AlexNet
     for i in range(0, 160):
         if pred_.squeeze().cpu().numpy()[i] == label.data.cpu().numpy()[i]:
             img = input[i].data.cpu().numpy()
-            img = 255 * (img-img.min()) / (img.max()-img.min())
-            img = img.astype('uint8')
+            img =(img-img.min()) / (img.max()-img.min())
+            #img = img.astype('uint8')
+
+            target_dir2=target_dir+'/'+sid
+            if not os.path.exists(target_dir2):
+                os.makedirs(target_dir2)
             
                     
             heatmap_lrp = LRP_[i].data.cpu().numpy()
             heatmap_lrp = np.absolute(heatmap_lrp)
-            heatmap_lrp = 255 * (heatmap_lrp-heatmap_lrp.min()) / (heatmap_lrp.max()-heatmap_lrp.min())
-            heatmap_lrp = heatmap_lrp.astype('uint8')
+            heatmap_lrp = (heatmap_lrp-heatmap_lrp.min()) / (heatmap_lrp.max()-heatmap_lrp.min())
+            #heatmap_lrp = heatmap_lrp.astype('uint8')
 
+           
+            fn=target_dir2+'/I_tr'+comm_str+'_'+str(label.data.cpu().numpy()[i])+'.txt'
+
+            torch.save(torch.from_numpy(img),fn)
+
+            
+            fn=target_dir2+'/H_tr'+comm_str+'_'+str(label.data.cpu().numpy()[i])+'.txt'
+            torch.save(torch.from_numpy(heatmap_lrp),fn)
+         
+            target_dir3=target_dir+'/figures/'+sid
+            if not os.path.exists(target_dir3):
+                os.makedirs(target_dir3)
+            
             dims=img.shape
             for j in range(dims[0]):
                 pylab.imshow(img[j,:,:],cmap='jet')
-                pylab.savefig('figures/img_#'+str(i)+'-ch'+str(j)+'_'+str(label.data.cpu().numpy()[i])+'.png')
+                pylab.savefig(target_dir3+'/img_#'+comm_str+'_tr_'+str(i)+'_ch'+str(j)+'_'+str(label.data.cpu().numpy()[i])+'.png')
                 pylab.close()
 
             dims=heatmap_lrp.shape
             for j in range(dims[0]):
                 pylab.imshow(heatmap_lrp[j,:,:],cmap='jet')
-                pylab.savefig('figures/heatmap_#'+str(i)+'-ch'+str(j)+'_'+str(label.data.cpu().numpy()[i])+'.png')
+                pylab.savefig(target_dir3+'/heatmap_#'+comm_str+'_tr_'+str(i)+'-ch'+str(j)+'_'+str(label.data.cpu().numpy()[i])+'.png')
                 pylab.close()
 
 
