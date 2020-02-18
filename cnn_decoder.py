@@ -241,12 +241,21 @@ target_dir=cwd+'/best_model'
 if not os.path.exists(target_dir):
     os.makedirs(target_dir)
 
-fn=target_dir+'/best_'+str(duration)+'-'+str(channel)+'_'+str(seed)+'.pt'
+fn=target_dir+'/best_'+str(duration)+'-'+str(channel)+'_'+str(seed)+'_'+sid+'.pt'
 torch.save(model_best.state_dict(),fn)
 
 
-pylab.plot(train_history,'-o')
-pylab.show()
+target_dir=cwd+'/train_history'
+if not os.path.exists(target_dir):
+    os.makedirs(target_dir)
+
+fj=target_dir+'/best_'+str(duration)+'-'+str(channel)+'_'+str(seed)+'_'+sid+'.json'
+fp=open(fj,'w')
+json.dump(train_history,fp)
+fp.close()
+
+#pylab.plot(train_history,'-o')
+#pylab.show()
 
 del train_data, train_label, test_data, test_label
 # end of script
