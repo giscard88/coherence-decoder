@@ -6,13 +6,7 @@ import warnings
 import sys
 import os
 
-import torch
-import torch.nn as nn
-import torch.nn.parallel
-import torch.backends.cudnn as cudnn
-import torch.distributed as dist
-import torch.optim as optim
-import torch.nn.functional as F
+
 import copy
 
 
@@ -67,9 +61,34 @@ for xin in var_:
         coll_seed[r-1]=np.amax(temp)
     plot_data.append(np.mean(coll_seed))
     plot_data_e.append(np.std(coll_seed))
-
+pylab.figure(1)
 pylab.bar([1,2,3,4],plot_data)
 pylab.errorbar([1,2,3,4],plot_data,yerr=plot_data_e)
+
+
+
+var_=range(1,15)
+plot_data=[]
+plot_data_e=[]
+all_max=[]
+for xin in var_:
+    coll_seed=np.zeros(20)
+    sid=xin
+    for r in range(1,21):
+        fp=open(cwd+'/train_history/best_'+str(duration)+'-'+str(channel)+'_'+str(r)+'_'+str(sid)+'.json','r')
+        temp=np.array(json.load(fp))
+        fp.close()
+        coll_seed[r-1]=np.amax(temp)
+        all_max.append(np.amax(temp))
+    plot_data.append(np.mean(coll_seed))
+    plot_data_e.append(np.std(coll_seed))
+
+print (np.mean(np.array(all_max)))
+pylab.figure(2)
+pylab.bar(var_,plot_data)
+pylab.errorbar(var_,plot_data,yerr=plot_data_e)
+pylab.show()
+
 pylab.show()
 
 
