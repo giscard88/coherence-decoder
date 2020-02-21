@@ -40,10 +40,10 @@ else:
 
 best_model = Net()
 
-fn=cwd+'/best_model/best_'+str(duration)+'-'+str(channel)+'_'+str(seed)+'.pt'
+fn=cwd+'/best_model/best_'+str(duration)+'-'+str(channel)+'_'+str(seed)+'_'+sid+'.pt'
 param=torch.load(fn)
 
-
+scale=int(4000/duration)
 
 
 best_model.load_state_dict(param)
@@ -154,10 +154,10 @@ class Reshape_net(nn.Module):
         super(Reshape_net, self).__init__()
         
     def forward(self, x):
-        return x.view(-1, channel*4*21*21) #64 channles of 21-by-21
+        return x.view(-1, channel*4*scale*21*21) #64 channles of 21-by-21
         
     def relprop(self, R):
-        return R.view(-1, channel*4, 21, 21)
+        return R.view(-1, channel*4*scale, 21, 21)
 
 
 
@@ -235,7 +235,7 @@ for idx, (input, label) in enumerate(data_loader):
     
     comm_str=str(duration)+'-'+str(channel)+'_'+str(seed)
     # save results which are classified correctly by VGG16, incorrectly by AlexNet
-    for i in range(0, 160):
+    for i in range(0,160):
         if pred_.squeeze().cpu().numpy()[i] == label.data.cpu().numpy()[i]:
             img = input[i].data.cpu().numpy()
             img =(img-img.min()) / (img.max()-img.min())
@@ -252,12 +252,12 @@ for idx, (input, label) in enumerate(data_loader):
             #heatmap_lrp = heatmap_lrp.astype('uint8')
 
            
-            fn=target_dir2+'/I_tr'+comm_str+'_'+str(label.data.cpu().numpy()[i])+'.txt'
+            fn=target_dir2+'/I_tr'+comm_str+'_'+str(label.data.cpu().numpy()[i])+'_tr_'+str(i)+'.pt'
 
             torch.save(torch.from_numpy(img),fn)
 
             
-            fn=target_dir2+'/H_tr'+comm_str+'_'+str(label.data.cpu().numpy()[i])+'.txt'
+            fn=target_dir2+'/H_tr'+comm_str+'_'+str(label.data.cpu().numpy()[i])+'_tr_'+str(i)+'.pt'
             torch.save(torch.from_numpy(heatmap_lrp),fn)
          
             target_dir3=target_dir+'/figures/'+sid

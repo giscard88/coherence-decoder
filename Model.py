@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(description='learn the patterns of coherence am
 parser.add_argument('--seed', type=int, default=10,
                     help='random seed for pytorch and numpy (default: 10)')
 
-parser.add_argument('--duration', type=int, default=500,
+parser.add_argument('--duration', type=int, default=4000,
                     help='duration of time series of interest (default: 4000)')
 
 parser.add_argument('--channel', type=int, default=2,
