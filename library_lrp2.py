@@ -111,6 +111,7 @@ class MaxPool2d(nn.MaxPool2d):
 
     
     def relprop(self, R):
+
         Z = self.Y + 1e-9
 
         S = R / Z
@@ -135,24 +136,37 @@ class Conv2d(nn.Conv2d):
         self.bias = conv2d.bias
         #print ('conv_w',self.weight.size(), conv2d.in_channels,conv2d.out_channels)
         
-    def gradprop(self, DY):
+    def gradprop(self, DY,we):
         output_padding = self.X.size()[2] - ((self.Y.size()[2] - 1) * self.stride[0] \
                                              - 2 * self.padding[0] + self.kernel_size[0])
-        return F.conv_transpose2d(DY, self.weight, stride=self.stride, 
+        return F.conv_transpose2d(DY, we, stride=self.stride, 
                                   padding=self.padding, output_padding=output_padding)
+
+
         
     def relprop(self, R):
-        Z = self.Y + 1e-9
+
+        w_plus = F.relu(self.weight) # (D, d)
+        Z = F.conv2d(self.X, w_plus, bias=self.bias, stride=self.stride, padding=self.padding, dilation=self.dilation, groups=self.groups)+1e-9
+        #Z = self.Y + 1e-9
         S = R / Z
-        C = self.gradprop(S)
+        C = self.gradprop(S, w_plus)
         R = self.X * C
         return R
 
     def relprop_zb(self, R):
-        Z = self.Y + 1e-9
+        w_minus = -F.relu(-self.weight)
+        
+        h = self.X*0 + 1.0
+        #self.w_plus = F.relu(self.weight) 
+        Z = self.Y+1e-9+ \
+        F.conv2d(h, w_minus, bias=self.bias, stride=self.stride, padding=self.padding, dilation=self.dilation, groups=self.groups) 
+       
+        #Z = self.Y + 1e-9
         S = R / Z
-        C = self.gradprop(S)
-        R = self.X * C
+        C = self.gradprop(S,self.weight)
+        Cm= self.gradprop(S,w_minus)
+        R = self.X * C+h*Cm
         return R
 
 
@@ -197,8 +211,9 @@ class CNN_lrp(nn.Module):
         return x
         
     def relprop(self, R):
-        for l in range(len(self.layers), 0, -1):
+        for l in range(len(self.layers), 1, -1):
             R = self.layers[l-1].relprop(R)
+        R=self.layers[0].relprop_zb(R)
         return R
 
 lrp_model=CNN_lrp()
@@ -217,7 +232,7 @@ correct_ = 0
 buffer_label = []
 buffer_lrp_model = []
 
-target_dir=cwd+'/LRP'
+target_dir=cwd+'/LRP2'
 if not os.path.exists(target_dir):
     os.makedirs(target_dir)
 
